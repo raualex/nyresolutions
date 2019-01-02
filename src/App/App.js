@@ -15,7 +15,11 @@ class App extends Component {
   }
 
   componentDidMount = () => {
-    localStorage.setItem('resolutions', JSON.stringify([]))
+    if (!localStorage.length) {
+      localStorage.setItem('resolutions', JSON.stringify([]))
+    } else {
+      return
+    }
   }
 
   handleChange = (event) => {
@@ -38,14 +42,51 @@ class App extends Component {
       let localStore = JSON.parse(localStorage.getItem('resolutions'))
       let resolutionToStore = [ { name, description, status } ]
       localStorage.setItem('resolutions', JSON.stringify([...localStore, ...resolutionToStore]))
-      this.setState({ isErrored: false })
+      this.setState({ name: '', description: '', status: '', isErrored: false })
     } else {
       this.setState({ isErrored: true })
     }
   }
 
+  handleDelete = (event) => {
+    let resolutionName = event.target.parentNode.getAttribute('data-name')
+    let localStore = JSON.parse(localStorage.getItem('resolutions'))
+    let filteredStore = localStore.filter((item) => {
+      return item.name !== resolutionName
+    })
+    localStorage.setItem('resolutions', JSON.stringify([...filteredStore]))
+  }
+
+  printCards = () => {
+    let resolutions;
+
+    if (localStorage.length) {
+      resolutions = JSON.parse(localStorage.getItem('resolutions'))
+      return resolutions
+    } else {
+      return []
+    }
+  }
+
   render() {
     let { name, description, isErrored } = this.state
+    let resolutionCards;
+
+    if (this.printCards() !== []) {
+      let cards = this.printCards()
+      resolutionCards = cards.map((resolution, index) => {
+        return <div key={index}>
+          <div data-name={resolution.name}>
+            <h1>{resolution.name}</h1>
+            <button onClick={this.handleDelete}>X</button>
+          </div>
+          <h2>{resolution.description}</h2>
+          <h4>{resolution.status}</h4>
+        </div>
+      });
+    } else {
+      resolutionCards = <div></div>
+    }
 
     return (
       <div className="App">
@@ -76,6 +117,7 @@ class App extends Component {
         <div className={isErrored ? 'App-error-msg' : 'App-error-msg hide'}>
           <h2>YOU MUST FILL OUT ALL REQUIRED FIELDS</h2>
         </div>
+        { resolutionCards }
       </div>
     );
   }
